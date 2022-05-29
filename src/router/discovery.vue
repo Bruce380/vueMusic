@@ -1,0 +1,163 @@
+<template lang="html">
+    <div class="discovery-container">
+        <!-- 轮播图 -->
+        <el-carousel :interval="4000" type="card" height="250px">
+        <!-- 循环获取轮播图接口数据 -->
+            <el-carousel-item v-for="(item, index) in banners" :key="index">
+                <img :src="item.imageUrl" alt="" />
+            </el-carousel-item>
+        </el-carousel>
+
+        <!-- 推荐歌单 -->
+        <div class="recommend">
+            <h2 class="title">推荐歌单</h2>
+            <div class="items">
+                <div class="item" v-for="(item,index) in list" :key="index">
+                <!-- 点击图片跳转详情页 -->
+                    <div class="img-wrap" @click="toPlaylist(item.id)">
+                        <!-- 绑定图片数据 -->
+                        <img :src="item.picUrl" alt="">
+                        <span class="iconfont icon-play"></span>
+                    </div>
+                    <p class="name">{{item.name}}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最新音乐 -->
+        <div class="news">
+            <h2 class="title">最新音乐</h2>
+            <div class="items">
+                <div class="item" v-for="(item,index) in songs" :key="index">
+                    <div class="img-wrap" @click="playMusic(item.id)">
+                        <img :src="item.picUrl" alt="">
+                        <span class="iconfont icon-play"></span>
+                    </div>
+                    <div class="song-wrap">
+                        <!-- 歌名 -->
+                        <div class="song-name">{{item.name}}</div>
+                        <!-- 歌手名 -->
+                        <div class="singer">{{item.song.artists[0].name}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最新mv -->
+        <div class="mvs">
+            <h2 class="title">最新MV</h2>
+            <div class="items">
+                <div class="item" v-for="(item,index) in mvs" :key="index">
+                    <div class="img-wrap" @click="toMV(item.id)">
+                        <img :src="item.picUrl" alt="">
+                        <span class="iconfont icon-play"></span>
+                        <div class="num-wrap">
+                            <div class="iconfont icon-play"></div>
+                            <!-- 播放次数 -->
+                            <div class="num">{{ item.playCount }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-wrap">
+                        <!-- mv名 -->
+                        <div class="name">{{ item.name }}</div>
+                        <!-- 歌手名 -->
+                        <div class="singer">{{ item.artistName }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</template>
+
+<script>
+import axios from 'axios'
+
+export default{
+    
+    name:'discovery',
+    data(){
+        return{
+            // 轮播图
+            banners:[],
+            // 推荐歌单
+            list: [],
+            // 最新音乐
+            songs: [],
+            // 推荐mv
+            mvs:[]
+        }
+    },
+    created(){
+        // 轮播图接口
+        axios({
+            url: 'https://autumnfish.cn/banner',
+            method: 'get'
+        }).then(res => {
+            // console.log(res);
+            this.banners=res.data.banners.slice(0,5)
+        })
+
+        // 推荐歌单接口
+        axios({
+            url: 'https://autumnfish.cn/personalized',
+            method: 'get',
+            params:{
+                // 获取数据量
+                limit: 10
+            }
+        }).then(res => {
+            // console.log(res);
+            this.list=res.data.result
+        })
+
+        // 最新音乐接口
+        axios({
+            url: 'https://autumnfish.cn/personalized/newsong',
+            method: 'get',
+        }).then(res => {
+            // console.log(res);
+            this.songs=res.data.result
+        })
+
+        // 最新mv接口
+        axios({
+            url: 'https://autumnfish.cn/personalized/mv',
+            method: 'get'
+        }).then(res => {
+            // console.log(res)
+            this.mvs = res.data.result
+        })
+    },
+    methods:{
+        // 跳转歌单详情页
+        toPlaylist(id){
+            this.$router.push(`/playlist?q=${id}`)
+        },
+        // 播放音乐
+        playMusic(id){
+            axios({
+                url: 'https://autumnfish.cn/song/url',
+                method: 'get',
+                params: {
+                    id // id:id
+                }
+            }).then(res => {
+                // console.log(res)
+                let url = res.data.data[0].url
+                // console.log(this.$parent.musicUrl)
+                // 设置给父组件的 播放地址
+                this.$parent.musicUrl = url
+            })
+        },
+        // 跳转mv页
+        toMV(id){
+            this.$router.push(`/mv?q=${id}`)
+        }
+    }
+}
+</script>
+
+<style lang="css">
+</style>
